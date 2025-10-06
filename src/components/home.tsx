@@ -59,7 +59,7 @@ export default function Home() {
     },
     {
       id: 3,
-      title: "Social Media Design",
+      title: "Social Media posts",
       category: "03",
       image: "/images/social-media-design.jpeg",
       description: "Engaging social media graphics with consistent brand messaging",
@@ -86,7 +86,7 @@ export default function Home() {
       icon: "✏���"
     },
     { 
-      title: "Social Media", 
+      title: "Social Media posts", 
       description: "Engaging social templates and campaign designs",
       number: "03",
       icon: "📱"
