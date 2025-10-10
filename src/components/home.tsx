@@ -43,7 +43,7 @@ export default function Home() {
   const projects = [
     {
       id: 1,
-      title: "Brand Identity Design",
+      title: "Brand Identity Logo Design",
       category: "01",
       image: "/images/logo-design.jpg",
       description: "Complete brand identity system with modern typography and color schemes",
@@ -59,14 +59,14 @@ export default function Home() {
     },
     {
       id: 3,
-      title: "Social Media posts",
+      title: "Social Media Posts",
       category: "03",
       image: "/images/social-media-design.jpeg",
       description: "Engaging social media graphics with consistent brand messaging",
       details: "Designed compelling social media content that maintains brand consistency while maximizing engagement through strategic use of color, typography, and visual hierarchy.",
       gallery: [
-        "/images/fashion-sale.jpg",
-        "/images/forever-cream.jpg", 
+        "/images/forever-cream.jpg",
+        "/images/fashion-post.jpg",
         "/images/headphones-offer.jpg"
       ]
     }
@@ -74,7 +74,7 @@ export default function Home() {
 
   const services = [
     { 
-      title: "Brand Identity", 
+      title: "Brand Logos", 
       description: "Complete brand systems including logos, color palettes, and guidelines",
       number: "01",
       icon: "🎨"
@@ -86,17 +86,11 @@ export default function Home() {
       icon: "✏���"
     },
     { 
-      title: "Social Media posts", 
+      title: "Social Media Posts", 
       description: "Engaging social templates and campaign designs",
       number: "03",
       icon: "📱"
     },
-    { 
-      title: "Print Design", 
-      description: "Professional marketing materials and print collateral",
-      number: "04",
-      icon: "📄"
-    }
   ];
 
   const testimonials = [
@@ -135,13 +129,16 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-black relative">
-                  <div className="absolute top-0 right-0 w-4 h-4 bg-[#FFC107]"></div>
-                  <div className="absolute inset-2 text-white font-black text-xs flex items-center justify-center">N</div>
+                <div className="flex items-center gap-2">
+                  <img 
+                    src="/images/nafi-logo-new.jpg" 
+                    alt="Nafeel Logo" 
+                    className="h-12 w-12 object-contain"
+                  />
+                  <h1 className="text-xl font-bold text-black tracking-tight">
+                    NAFI CREATIONS
+                  </h1>
                 </div>
-                <h1 className="text-xl font-bold text-black tracking-tight">
-                  NAFI CREATIONS
-                </h1>
               </div>
             </div>
             <div className="hidden md:flex space-x-12">
@@ -254,7 +251,7 @@ export default function Home() {
                 {/* Main Photo */}
                 <div className="relative w-80 h-96 overflow-hidden border-8 border-white shadow-2xl">
                   <img 
-                    src="/images/nafi-profile.png" 
+                    src="/images/nafi-profile.png"
                     alt="Nafi - Graphic Designer" 
                     className="w-full h-full object-cover"
                   />
