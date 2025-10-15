@@ -139,11 +139,20 @@ export default function Home() {
             <div className="flex items-center">
               <div className="flex items-center space-x-3">
                 <div className="flex items-center gap-2">
-                  <img 
-                    src="/images/nafi-logo-new.jpg" 
-                    alt="Nafeel Logo" 
-                    className="h-12 w-12 object-contain"
-                  />
+                  <div className="relative h-12 w-12">
+                    <img
+                      src="/images/nafi-logo-white.png"
+                      alt="Nafeel Logo"
+                      className={`absolute inset-0 h-12 w-12 object-contain transition-opacity duration-300 ease-in-out ${scrolled ? 'opacity-0' : 'opacity-100'}`}
+                      aria-hidden={scrolled}
+                    />
+                    <img
+                      src="/images/nafi-logo-new.jpg"
+                      alt="Nafeel Logo"
+                      className={`absolute inset-0 h-12 w-12 object-contain transition-opacity duration-300 ease-in-out ${scrolled ? 'opacity-100' : 'opacity-0'}`}
+                      aria-hidden={!scrolled}
+                    />
+                  </div>
                   <h1 className={`${scrolled ? 'text-xl font-bold text-black' : 'text-xl font-bold text-white'} tracking-tight`}>
                     NAFI CREATIONS
                   </h1>
@@ -185,10 +194,13 @@ export default function Home() {
         </div>
         {/* Mobile menu overlay */}
         {mobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 z-50 bg-white/95 backdrop-blur-sm p-6">
+            <div className="md:hidden fixed inset-0 z-50 bg-white/95 backdrop-blur-sm p-6">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-2">
-                <img src="/images/nafi-logo-new.jpg" alt="Nafi" className="h-10 w-10 object-contain" />
+                <div className="relative h-10 w-10">
+                  <img src="/images/nafi-logo-white.png" alt="Nafi" className={`absolute inset-0 h-10 w-10 object-contain transition-opacity duration-300 ease-in-out ${scrolled ? 'opacity-0' : 'opacity-100'}`} />
+                  <img src="/images/nafi-logo-new.jpg" alt="Nafi" className={`absolute inset-0 h-10 w-10 object-contain transition-opacity duration-300 ease-in-out ${scrolled ? 'opacity-100' : 'opacity-0'}`} />
+                </div>
                 <div className="text-lg font-bold">NAFI CREATIONS</div>
               </div>
               <button aria-label="Close menu" onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-md">
@@ -209,9 +221,12 @@ export default function Home() {
       </nav>
 
       {/* Hero Section - New Design */}
-  <section id="home" style={{ backgroundImage: "url('/images/landing%20page%20bg.png')" }} className="min-h-screen pt-32 pb-24 flex items-center justify-center relative bg-white overflow-hidden bg-cover bg-center">
-        {/* Yellow accent elements with animations */}
-        <div className={`absolute top-20 left-8 w-1 h-32 bg-[#FFC107] transition-all duration-1000 delay-500 ${isLoaded ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'}`}></div>
+  <section id="home" className="min-h-screen pt-32 pb-24 flex items-center justify-center relative bg-white overflow-hidden">
+    {/* Responsive background images: desktop and mobile */}
+    <div className="absolute inset-0 hidden lg:block" style={{ backgroundImage: "url('/images/landing%20page%20bg.png')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
+    <div className="absolute inset-0 block lg:hidden" style={{ backgroundImage: "url('/images/mob%20view.png')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
+    {/* Yellow accent elements with animations */}
+    <div className={`absolute top-20 left-8 w-1 h-32 bg-[#FFC107] transition-all duration-1000 delay-500 ${isLoaded ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'}`}></div>
         <div className={`absolute bottom-20 right-8 w-32 h-1 bg-[#FFC107] transition-all duration-1000 delay-700 ${isLoaded ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`}></div>
         
         <div className="relative z-10 text-center max-w-5xl mx-auto px-8">
