@@ -10,9 +10,18 @@ export default function Home() {
   const [lightboxImage, setLightboxImage] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', onScroll);
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   const scrollToSection = (sectionId) => {
@@ -124,7 +133,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white text-black font-['Inter'] overflow-x-hidden">
       {/* Navigation */}
-      <nav className={`fixed top-0 w-full bg-white/95 backdrop-blur-sm z-40 border-b border-gray-100 transition-all duration-1000 ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
+  <nav className={`fixed top-0 w-full backdrop-blur-sm z-40 transition-all duration-300 ${scrolled ? 'bg-white/95 border-b border-gray-100' : 'bg-transparent border-b-0'} ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
@@ -135,7 +144,7 @@ export default function Home() {
                     alt="Nafeel Logo" 
                     className="h-12 w-12 object-contain"
                   />
-                  <h1 className="text-xl font-bold text-black tracking-tight">
+                  <h1 className={`${scrolled ? 'text-xl font-bold text-black' : 'text-xl font-bold text-white'} tracking-tight`}>
                     NAFI CREATIONS
                   </h1>
                 </div>
@@ -146,19 +155,61 @@ export default function Home() {
                 <button 
                   key={item}
                   onClick={() => scrollToSection(item.toLowerCase())}
-                  className={`text-sm font-medium text-gray-600 hover:text-black transition-all duration-300 tracking-wide uppercase transform hover:scale-105 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+                  className={`${scrolled ? 'text-sm font-medium text-gray-600 hover:text-black' : 'text-sm font-medium text-white hover:text-white/90'} transition-colors duration-200 tracking-wide uppercase transform hover:scale-105 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
                   style={{ transitionDelay: `${index * 100}ms` }}
                 >
                   {item}
                 </button>
               ))}
             </div>
+            {/* Mobile hamburger */}
+            <div className="md:hidden flex items-center">
+              <button
+                aria-label="Toggle menu"
+                aria-expanded={mobileMenuOpen}
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className={`p-2 rounded-md focus:outline-none ${scrolled ? 'text-gray-800' : 'text-white'}`}
+              >
+                {mobileMenuOpen ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         </div>
+        {/* Mobile menu overlay */}
+        {mobileMenuOpen && (
+          <div className="md:hidden fixed inset-0 z-50 bg-white/95 backdrop-blur-sm p-6">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-2">
+                <img src="/images/nafi-logo-new.jpg" alt="Nafi" className="h-10 w-10 object-contain" />
+                <div className="text-lg font-bold">NAFI CREATIONS</div>
+              </div>
+              <button aria-label="Close menu" onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <nav className="flex flex-col space-y-4">
+              {['HOME', 'ABOUT', 'PORTFOLIO', 'SERVICES', 'CONTACT'].map((item) => (
+                <button key={item} onClick={() => { setMobileMenuOpen(false); scrollToSection(item.toLowerCase()); }} className="text-lg font-medium text-gray-800 text-left">
+                  {item}
+                </button>
+              ))}
+            </nav>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section - New Design */}
-      <section id="home" className="min-h-screen flex items-center justify-center relative bg-white overflow-hidden">
+  <section id="home" style={{ backgroundImage: "url('/images/landing%20page%20bg.png')" }} className="min-h-screen pt-32 pb-24 flex items-center justify-center relative bg-white overflow-hidden bg-cover bg-center">
         {/* Yellow accent elements with animations */}
         <div className={`absolute top-20 left-8 w-1 h-32 bg-[#FFC107] transition-all duration-1000 delay-500 ${isLoaded ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'}`}></div>
         <div className={`absolute bottom-20 right-8 w-32 h-1 bg-[#FFC107] transition-all duration-1000 delay-700 ${isLoaded ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`}></div>
@@ -167,10 +218,10 @@ export default function Home() {
           <div className="mb-16">
             {/* Main heading with staggered animation */}
             <div className="mb-8">
-              <h1 className={`text-7xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter text-black transition-all duration-1000 delay-300 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
+              <h1 className={`text-7xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter text-white transition-all duration-1000 delay-300 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
                 NAFI
               </h1>
-              <h1 className={`text-7xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter text-black transition-all duration-1000 delay-500 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
+              <h1 className={`text-7xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter text-white transition-all duration-1000 delay-500 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
                 CREATIONS
               </h1>
             </div>
@@ -182,18 +233,18 @@ export default function Home() {
             </div>
             
             {/* Subtitle with fade-in */}
-            <p className={`text-xl font-light tracking-wide text-gray-600 mb-6 transition-all duration-1000 delay-900 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+            <p className={`text-xl font-light tracking-wide text-white mb-6 transition-all duration-1000 delay-900 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
               Design beyond limits
             </p>
             
             {/* Description with fade-in */}
-            <p className={`text-base text-gray-500 max-w-2xl mx-auto leading-relaxed mb-12 transition-all duration-1000 delay-1000 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+            <p className={`text-base text-white max-w-2xl mx-auto leading-relaxed mb-12 transition-all duration-1000 delay-1000 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
               Creating impactful visual experiences through minimal design, bold typography, and strategic use of color that resonate with audiences and drive results.
             </p>
           </div>
           
           {/* CTA Button with hover animations */}
-          <div className={`transition-all duration-1000 delay-1100 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+          <div className={`transition-all duration-1000 delay-1100 mb-8 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
             <Button 
               onClick={() => scrollToSection('portfolio')}
               size="lg" 
