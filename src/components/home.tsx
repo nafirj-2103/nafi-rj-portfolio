@@ -5,6 +5,79 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ExternalLink, X, ChevronLeft, ChevronRight, Star, Mail, Phone, Facebook } from 'lucide-react';
 
+// Hook for scroll animations - use RAF batching and avoid layout reads to prevent jank
+const useScrollAnimation = () => {
+  useEffect(() => {
+    // Lower threshold for landing section to avoid stuck scroll
+    const REMOVE_DELAY = 900;
+    const removeTimers = new WeakMap<Element, number>();
+    const lastAnimated = new WeakMap<Element, number>();
+
+    const addVisible = (target: HTMLElement) => {
+      if (target.classList.contains('visible')) return;
+      requestAnimationFrame(() => {
+        target.classList.add('visible');
+        lastAnimated.set(target, performance.now());
+      });
+    };
+
+    const scheduleRemoval = (target: HTMLElement) => {
+      const prev = removeTimers.get(target);
+      if (prev) clearTimeout(prev);
+      const id = window.setTimeout(() => {
+        target.classList.remove('visible');
+        removeTimers.delete(target);
+      }, REMOVE_DELAY);
+      removeTimers.set(target, id);
+    };
+
+    let rafScheduled = false;
+    const queue: IntersectionObserverEntry[] = [];
+
+    const process = () => {
+      rafScheduled = false;
+      const items = queue.splice(0, queue.length);
+      items.forEach((entry) => {
+        const target = entry.target as HTMLElement;
+        // If landing section, use lower threshold for animation
+        if (target.id === 'home') {
+          addVisible(target);
+          const prev = removeTimers.get(target);
+          if (prev) { clearTimeout(prev); removeTimers.delete(target); }
+          return;
+        }
+        if (entry.isIntersecting) {
+          addVisible(target);
+          const prev = removeTimers.get(target);
+          if (prev) { clearTimeout(prev); removeTimers.delete(target); }
+        } else {
+          scheduleRemoval(target);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e) => queue.push(e));
+      if (!rafScheduled) {
+        rafScheduled = true;
+        requestAnimationFrame(process);
+      }
+    }, { threshold: 0.2 });
+
+    const elements = Array.from(document.querySelectorAll('[data-animate-scroll]'));
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      elements.forEach((el) => observer.unobserve(el));
+      observer.disconnect();
+      elements.forEach((el) => {
+        const t = removeTimers.get(el);
+        if (t) clearTimeout(t);
+      });
+    };
+  }, []);
+};
+
 export default function Home() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
@@ -12,6 +85,8 @@ export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  useScrollAnimation();
 
   useEffect(() => {
     setIsLoaded(true);
@@ -19,7 +94,8 @@ export default function Home() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener('scroll', onScroll);
+    // use passive listener to avoid blocking the main thread during scroll
+    window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -130,8 +206,187 @@ export default function Home() {
     { number: "98%", label: "Client Satisfaction" }
   ];
 
+  const sliderItems = [
+    { id: 1, title: "Brand Design", desc: "Complete brand identity", image: "/images/logo-design.jpg" },
+    { id: 2, title: "Social Media", desc: "Engaging graphics", image: "/images/social-media-design.jpeg" },
+    { id: 3, title: "Marketing", desc: "Professional materials", image: "/images/construction-brochure.jpg" }
+  ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % sliderItems.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + sliderItems.length) % sliderItems.length);
+  };
+
+  const goToSlide = (index) => {
+    setCurrentSlide(index);
+  };
+
   return (
     <div className="min-h-screen bg-white text-black font-['Inter'] overflow-x-hidden">
+      <style>{`
+        @keyframes slideUpIn {
+          from {
+            opacity: 0;
+            transform: translateY(160px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-80px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(80px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        /* larger upward movement for stronger effect */
+        [data-animate-scroll] {
+          opacity: 0;
+          transform: translateY(160px);
+        }
+
+        [data-animate-scroll].visible {
+          animation: slideUpIn 1.1s cubic-bezier(.22,.9,.36,1) forwards;
+        }
+        
+        [data-animate-scroll] .card-item {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        
+        [data-animate-scroll].visible .card-item {
+          animation: scaleIn 0.8s ease-out forwards;
+        }
+        
+        [data-animate-scroll].visible .card-item:nth-child(1) {
+          animation-delay: 0.1s;
+        }
+        
+        [data-animate-scroll].visible .card-item:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+        
+        [data-animate-scroll].visible .card-item:nth-child(3) {
+          animation-delay: 0.3s;
+        }
+        
+        [data-animate-scroll].visible .card-item:nth-child(4) {
+          animation-delay: 0.4s;
+        }
+        
+        /* Slider styles */
+        .slider-container {
+          position: relative;
+          overflow: hidden;
+          border-radius: 12px;
+        }
+        
+        .slider-wrapper {
+          display: flex;
+          transition: transform 0.5s ease-out;
+        }
+        
+        .slider-item {
+          min-width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .slider-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background-color: #ccc;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        
+        .slider-dot.active {
+          background-color: #FFC107;
+          width: 30px;
+          border-radius: 5px;
+        }
+        
+        .slider-btn {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          background-color: rgba(255, 255, 255, 0.8);
+          border: none;
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          cursor: pointer;
+          font-size: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+          z-index: 10;
+        }
+        
+        .slider-btn:hover {
+          background-color: #FFC107;
+          transform: translateY(-50%) scale(1.1);
+        }
+        
+        .slider-btn.prev {
+          left: 15px;
+        }
+        
+        .slider-btn.next {
+          right: 15px;
+        }
+
+        /* Floating animation for hero CTA */
+        @keyframes floatY {
+          0% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+          100% { transform: translateY(0); }
+        }
+
+        .hero-cta {
+          will-change: transform;
+          animation: floatY 3.6s ease-in-out infinite;
+        }
+
+        .hero-cta:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
       {/* Navigation */}
   <nav className={`fixed top-0 w-full backdrop-blur-sm z-40 transition-all duration-300 ${scrolled ? 'bg-white/95 border-b border-gray-100' : 'bg-transparent border-b-0'} ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
         <div className="max-w-7xl mx-auto px-8 py-6">
@@ -263,7 +518,7 @@ export default function Home() {
             <Button 
               onClick={() => scrollToSection('portfolio')}
               size="lg" 
-              className="bg-[#FFC107] hover:bg-[#FFB300] text-black font-semibold px-12 py-4 text-base rounded-none transition-all duration-300 hover:shadow-lg hover:scale-105 uppercase tracking-wide transform hover:-translate-y-1"
+              className="hero-cta bg-[#FFC107] hover:bg-[#FFB300] text-black font-semibold px-6 py-3 text-base rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105 uppercase tracking-wide transform hover:-translate-y-1 inline-flex items-center justify-center"
             >
               VIEW MY WORK
             </Button>
@@ -272,7 +527,7 @@ export default function Home() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-32 bg-white relative">
+      <section id="about" data-animate-scroll className="py-32 bg-white relative">
         {/* Yellow accent */}
         <div className="absolute top-20 right-8 w-2 h-32 bg-[#FFC107]"></div>
         
@@ -315,7 +570,7 @@ export default function Home() {
                 <div className="absolute -bottom-8 -left-8 w-12 h-12 bg-[#FFC107]"></div>
                 
                 {/* Main Photo */}
-                <div className="relative w-80 h-96 overflow-hidden border-8 border-white shadow-2xl">
+                <div className="relative w-100 h-96 overflow-hidden border-8 border-white shadow-2xl rounded-full">
                   <img 
                     src="/images/nafi-profile.png"
                     alt="Nafi - Graphic Designer" 
@@ -335,7 +590,7 @@ export default function Home() {
       </section>
 
       {/* Portfolio Section */}
-      <section id="portfolio" className="py-24 bg-white">
+      <section id="portfolio" data-animate-scroll className="py-24 bg-white">
         <div className="max-w-6xl mx-auto px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black mb-6 text-black tracking-tight">
@@ -381,8 +636,60 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Image Slider Section */}
+      <section data-animate-scroll className="py-24 bg-gray-900">
+        <div className="max-w-5xl mx-auto px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-black mb-6 text-white tracking-tight">
+              Featured Projects
+            </h2>
+            <div className="w-12 h-1 bg-[#FFC107] mx-auto"></div>
+          </div>
+
+          <div className="slider-container relative bg-white rounded-xl overflow-hidden shadow-2xl">
+            <div className="slider-wrapper" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
+              {sliderItems.map((item) => (
+                <div key={item.id} className="slider-item">
+                  <img 
+                    src={item.image} 
+                    alt={item.title}
+                    className="w-full h-96 object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <button className="slider-btn prev" onClick={prevSlide}>
+              ❮
+            </button>
+            <button className="slider-btn next" onClick={nextSlide}>
+              ❯
+            </button>
+
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3">
+              {sliderItems.map((_, index) => (
+                <div
+                  key={index}
+                  className={`slider-dot ${currentSlide === index ? 'active' : ''}`}
+                  onClick={() => goToSlide(index)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <h3 className="text-2xl font-bold text-black mb-2">
+              {sliderItems[currentSlide].title}
+            </h3>
+            <p className="text-gray-600">
+              {sliderItems[currentSlide].desc}
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Services Section */}
-      <section id="services" className="py-24 bg-gray-50">
+      <section id="services" data-animate-scroll className="py-24 bg-gray-50">
         <div className="max-w-6xl mx-auto px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black mb-6 text-black tracking-tight">
@@ -417,7 +724,7 @@ export default function Home() {
       </section>
 
       {/* Client Testimonials */}
-      <section className="py-24 bg-white">
+      <section data-animate-scroll className="py-24 bg-white">
         <div className="max-w-6xl mx-auto px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black mb-6 text-black tracking-tight">
@@ -453,7 +760,7 @@ export default function Home() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 bg-[#FFC107]">
+      <section data-animate-scroll className="py-20 bg-[#FFC107]">
         <div className="max-w-6xl mx-auto px-8">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             {stats.map((stat, index) => (
@@ -471,7 +778,7 @@ export default function Home() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-24 bg-white">
+      <section id="contact" data-animate-scroll className="py-24 bg-white">
         <div className="max-w-4xl mx-auto px-8 text-center">
           <h2 className="text-4xl font-black mb-6 text-black tracking-tight">
             Let's Work Together
