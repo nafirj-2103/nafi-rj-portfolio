@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ExternalLink, X, ChevronLeft, ChevronRight, Star, Mail, Phone, Facebook } from 'lucide-react';
+import { ExternalLink, X, ChevronLeft, ChevronRight, Star, Mail, Phone, Facebook, ArrowUp } from 'lucide-react';
 
 // Hook for scroll animations - use RAF batching and avoid layout reads to prevent jank
 const useScrollAnimation = () => {
@@ -86,6 +86,9 @@ export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [isAutoPlayActive, setIsAutoPlayActive] = useState(true);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
   useScrollAnimation();
 
   useEffect(() => {
@@ -99,6 +102,18 @@ export default function Home() {
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollToTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -183,21 +198,47 @@ export default function Home() {
       name: "Sarah Johnson",
       role: "Tech Startup",
       rating: 5,
+      image: "/images/logo-design.jpg",
       text: "NAFI delivered exceptional branding that perfectly captured our vision. Professional, creative, and reliable!"
     },
     {
       name: "Michael Chen",
       role: "E-commerce Brand",
       rating: 5,
+      image: "/images/social-media-design.jpeg",
       text: "The social media designs increased our engagement by 200%. Outstanding work and great communication throughout."
     },
     {
       name: "Emily Rodriguez",
       role: "Local Business",
       rating: 5,
+      image: "/images/construction-brochure.jpg",
       text: "Amazing attention to detail that helped us stand out in a competitive market. Highly recommended!"
+    },
+    {
+      name: "Alex Thompson",
+      role: "Fashion Brand",
+      rating: 5,
+      image: "/images/forever-cream.jpg",
+      text: "The creativity and attention to detail in every design is unmatched. Boosted our brand presence significantly!"
+    },
+    {
+      name: "Jessica Lee",
+      role: "Digital Agency",
+      rating: 5,
+      image: "/images/fashion-post.jpg",
+      text: "Working with NAFI was a game-changer. Every project exceeded our expectations. Highly recommend!"
     }
   ];
+
+  // Auto-advance testimonials on mount
+  useEffect(() => {
+    if (!isAutoPlayActive) return;
+    const interval = setInterval(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 3000); // 3s auto-advance
+    return () => clearInterval(interval);
+  }, [isAutoPlayActive, testimonials.length]);
 
   const stats = [
     { number: "150+", label: "Projects Completed" },
@@ -219,6 +260,105 @@ export default function Home() {
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + sliderItems.length) % sliderItems.length);
   };
+
+  // Testimonials manual controls
+  const nextTestimonial = () => {
+    setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+  };
+
+  const prevTestimonial = () => {
+    setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  };
+
+  // Autoplay pause/resume handling: pause temporarily on user interaction then resume
+  const pauseTimeoutRef = useRef<number | null>(null);
+
+  const clearPauseTimeout = () => {
+    if (pauseTimeoutRef.current) {
+      clearTimeout(pauseTimeoutRef.current);
+      pauseTimeoutRef.current = null;
+    }
+  };
+
+  const pauseAutoplayFor = (ms = 8000) => {
+    setIsAutoPlayActive(false);
+    clearPauseTimeout();
+    pauseTimeoutRef.current = window.setTimeout(() => {
+      setIsAutoPlayActive(true);
+      pauseTimeoutRef.current = null;
+    }, ms);
+  };
+
+  // Swipe / drag state + refs
+  const desktopWrapperRef = useRef<HTMLDivElement | null>(null);
+  const mobileContainerRef = useRef<HTMLDivElement | null>(null);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const deltaXRef = useRef(0);
+  const [isDraggingState, setIsDraggingState] = useState(false);
+
+  const SWIPE_THRESHOLD = 50; // px
+
+  const applyDesktopTranslate = (delta = 0) => {
+    if (!desktopWrapperRef.current) return;
+    const base = -currentTestimonial * desktopWrapperRef.current.clientWidth;
+    // use transform in px to combine percent base is in px; easier: compute percent transform adjusted by delta
+    desktopWrapperRef.current.style.transform = `translateX(calc(-${currentTestimonial * 100}% + ${delta}px))`;
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pauseAutoplayFor();
+    isDraggingRef.current = true;
+    setIsDraggingState(true);
+    startXRef.current = e.clientX;
+    deltaXRef.current = 0;
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return;
+    const x = e.clientX;
+    const delta = x - startXRef.current;
+    deltaXRef.current = delta;
+    // apply visual dragging only on desktop wrapper
+    applyDesktopTranslate(delta);
+  };
+
+  const finishDrag = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    setIsDraggingState(false);
+    const delta = deltaXRef.current;
+    deltaXRef.current = 0;
+    // reset transform
+    if (desktopWrapperRef.current) {
+      desktopWrapperRef.current.style.transform = '';
+    }
+    if (Math.abs(delta) > SWIPE_THRESHOLD) {
+      if (delta < 0) {
+        setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+      } else {
+        setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+      }
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    finishDrag();
+    try { (e.target as Element).releasePointerCapture?.(e.pointerId); } catch {}
+  };
+
+  const handlePointerCancel = (e: React.PointerEvent) => {
+    finishDrag();
+    try { (e.target as Element).releasePointerCapture?.(e.pointerId); } catch {}
+  };
+
+  // ensure timeout cleared on unmount
+  useEffect(() => {
+    return () => {
+      clearPauseTimeout();
+    };
+  }, []);
 
   const goToSlide = (index) => {
     setCurrentSlide(index);
@@ -386,9 +526,123 @@ export default function Home() {
         .hero-cta:hover {
           animation-play-state: paused;
         }
+
+        /* Testimonials carousel animations */
+        @keyframes slideInFromRight {
+          from {
+            opacity: 0;
+            transform: translateX(100px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes slideOutToLeft {
+          from {
+            opacity: 1;
+            transform: translateX(0);
+          }
+          to {
+            opacity: 0;
+            transform: translateX(-100px);
+          }
+        }
+
+        @keyframes scaleRotate {
+          0% { transform: scale(0.95) rotateY(-10deg); opacity: 0; }
+          50% { transform: scale(1.02) rotateY(2deg); }
+          100% { transform: scale(1) rotateY(0); opacity: 1; }
+        }
+
+        .testimonial-card {
+          animation: slideInFromRight 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .testimonial-card.exit {
+          animation: slideOutToLeft 0.6s ease-in forwards;
+        }
+
+        .testimonial-avatar {
+          animation: scaleRotate 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        /* Positioning for testimonial nav buttons so they don't overlap avatar */
+        .testimonial-nav-btn {
+          position: absolute;
+          top: 8%;
+          background-color: rgba(255,255,255,0.95);
+          width: 44px;
+          height: 44px;
+          border-radius: 9999px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 30;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+          transition: transform 0.18s ease, background-color 0.18s ease;
+        }
+
+        .testimonial-nav-btn:hover { transform: scale(1.06); background-color: #FFC107; }
+
+        .testimonial-nav-btn.prev { left: 12px; }
+        .testimonial-nav-btn.next { right: 12px; }
+
+        /* Cursor feedback for dragging */
+        .testimonial-carousel-wrapper {
+          cursor: grab;
+          user-select: none;
+        }
+
+        .testimonial-carousel-wrapper.dragging {
+          cursor: grabbing;
+        }
+
+        .testimonial-carousel-wrapper.dragging .flex {
+          transition: none;
+        }
+
+        /* Scroll to top button styles */
+        .scroll-to-top-btn {
+          position: fixed;
+          bottom: 32px;
+          right: 32px;
+          width: 48px;
+          height: 48px;
+          background-color: #FFC107;
+          border: none;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 50;
+          box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+          transition: all 0.3s ease;
+          opacity: 0;
+          transform: translateY(20px) scale(0.8);
+          pointer-events: none;
+        }
+
+        .scroll-to-top-btn.visible {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+          pointer-events: all;
+        }
+
+        .scroll-to-top-btn:hover {
+          background-color: #FFB300;
+          box-shadow: 0 8px 25px rgba(255, 193, 7, 0.6);
+          transform: translateY(-2px) scale(1.05);
+        }
+
+        .scroll-to-top-btn:active {
+          transform: translateY(2px) scale(0.95);
+        }
       `}</style>
       {/* Navigation */}
-  <nav className={`fixed top-0 w-full backdrop-blur-sm z-40 transition-all duration-300 ${scrolled ? 'bg-white/95 border-b border-gray-100' : 'bg-transparent border-b-0'} ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
+  <nav className={`fixed top-0 w-full z-40 transition-all duration-300 ${scrolled ? 'backdrop-blur-sm bg-white/95 border-b border-gray-100' : 'bg-transparent border-b-0'} ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
@@ -724,7 +978,7 @@ export default function Home() {
       </section>
 
       {/* Client Testimonials */}
-      <section data-animate-scroll className="py-24 bg-white">
+      <section data-animate-scroll className="py-24 bg-gradient-to-br from-white to-gray-50">
         <div className="max-w-6xl mx-auto px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black mb-6 text-black tracking-tight">
@@ -736,25 +990,144 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-6 border-0 shadow-sm bg-white hover:shadow-md transition-all duration-300">
-                <CardContent className="p-0">
-                  <div className="flex mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-[#FFC107] text-[#FFC107]" />
-                    ))}
+          {/* Desktop: Continuous Carousel */}
+          <div className="hidden lg:block">
+            <div
+              className={`relative overflow-hidden rounded-xl testimonial-carousel-wrapper ${isDraggingState ? 'dragging' : ''}`}
+              onMouseEnter={() => { clearPauseTimeout(); setIsAutoPlayActive(false); }}
+              onMouseLeave={() => { clearPauseTimeout(); setIsAutoPlayActive(true); }}
+              onTouchStart={() => { clearPauseTimeout(); setIsAutoPlayActive(false); }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerCancel}
+            >
+              <div
+                ref={desktopWrapperRef}
+                className="flex transition-all duration-500 ease-out"
+                style={{ transform: `translateX(-${currentTestimonial * 100}%)` }}
+              >
+                {testimonials.map((testimonial, index) => (
+                  <div key={index} className="min-w-full flex-shrink-0 px-6">
+                    <div className="testimonial-card bg-white p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-2xl transition-shadow">
+                      <div className="flex items-start gap-6">
+                        <div className="testimonial-avatar flex-shrink-0">
+                          <img
+                            src={testimonial.image}
+                            alt={testimonial.name}
+                            className="w-20 h-20 rounded-full object-cover border-4 border-[#FFC107] shadow-md"
+                          />
+                        </div>
+                        <div className="flex-grow">
+                          <div className="flex gap-1 mb-3">
+                            {[...Array(testimonial.rating)].map((_, i) => (
+                              <Star key={i} className="w-5 h-5 fill-[#FFC107] text-[#FFC107]" />
+                            ))}
+                          </div>
+                          <p className="text-gray-700 mb-4 leading-relaxed italic text-lg">
+                            "{testimonial.text}"
+                          </p>
+                          <div>
+                            <div className="font-bold text-black text-base">{testimonial.name}</div>
+                            <div className="text-gray-500 text-sm">{testimonial.role}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-gray-700 mb-6 leading-relaxed text-sm italic">
-                    "{testimonial.text}"
-                  </p>
-                  <div>
-                    <div className="font-bold text-black text-sm">{testimonial.name}</div>
-                    <div className="text-gray-500 text-xs">{testimonial.role}</div>
+                ))}
+              </div>
+
+              {/* Prev/Next controls for desktop testimonials (placed higher to avoid avatar overlap) */}
+              <button
+                aria-label="Previous testimonial"
+                className="slider-btn prev testimonial-nav-btn"
+                onClick={() => { prevTestimonial(); pauseAutoplayFor(); }}
+              >
+                ❮
+              </button>
+              <button
+                aria-label="Next testimonial"
+                className="slider-btn next testimonial-nav-btn"
+                onClick={() => { nextTestimonial(); pauseAutoplayFor(); }}
+              >
+                ❯
+              </button>
+            </div>
+
+            {/* Dot indicators */}
+            <div className="flex justify-center gap-2 mt-8">
+              {testimonials.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => { setCurrentTestimonial(index); pauseAutoplayFor(); }}
+                  onMouseEnter={() => { clearPauseTimeout(); setIsAutoPlayActive(false); }}
+                  onMouseLeave={() => { clearPauseTimeout(); setIsAutoPlayActive(true); }}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    currentTestimonial === index ? 'bg-[#FFC107] w-8' : 'bg-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile: One per screen with animation */}
+          <div
+            className={`lg:hidden testimonial-carousel-wrapper ${isDraggingState ? 'dragging' : ''}`}
+            ref={mobileContainerRef}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerCancel}
+          >
+            <div className="overflow-hidden">
+              {testimonials.map((testimonial, index) => (
+                <div
+                  key={index}
+                  className={`testimonial-card transition-all duration-500 ${
+                    currentTestimonial === index ? 'block' : 'hidden'
+                  }`}
+                >
+                  <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+                    <div className="flex flex-col items-center text-center">
+                      <div className="testimonial-avatar mb-4">
+                        <img
+                          src={testimonial.image}
+                          alt={testimonial.name}
+                          className="w-24 h-24 rounded-full object-cover border-4 border-[#FFC107] shadow-md"
+                        />
+                      </div>
+                      <div className="flex gap-1 mb-4 justify-center">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <Star key={i} className="w-5 h-5 fill-[#FFC107] text-[#FFC107]" />
+                        ))}
+                      </div>
+                      <p className="text-gray-700 mb-4 leading-relaxed italic text-base">
+                        "{testimonial.text}"
+                      </p>
+                      <div>
+                        <div className="font-bold text-black text-base">{testimonial.name}</div>
+                        <div className="text-gray-500 text-sm">{testimonial.role}</div>
+                      </div>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              ))}
+            </div>
+
+            {/* Mobile dots */}
+            <div className="flex justify-center gap-2 mt-8">
+              {testimonials.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => { setCurrentTestimonial(index); pauseAutoplayFor(); }}
+                  onTouchStart={() => { clearPauseTimeout(); setIsAutoPlayActive(false); }}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    currentTestimonial === index ? 'bg-[#FFC107] w-8' : 'bg-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -925,6 +1298,15 @@ export default function Home() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Scroll to Top Button */}
+      <button
+        onClick={scrollToTop}
+        className={`scroll-to-top-btn ${showScrollToTop ? 'visible' : ''}`}
+        aria-label="Scroll to top"
+      >
+        <ArrowUp className="w-6 h-6 text-black" />
+      </button>
     </div>
   );
 }
