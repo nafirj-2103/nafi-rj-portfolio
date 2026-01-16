@@ -173,7 +173,7 @@ export default function ClientTestimonials(): JSX.Element {
   }, [current]);
 
   const renderCard = (t: Testimonial, role = 'current', idx?: number) => {
-    const base = 'w-full max-w-5xl bg-white rounded-2xl shadow-lg border border-gray-200 p-5 md:p-8 flex items-center gap-6 z-10';
+    const base = 'w-full max-w-5xl bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8 flex flex-col md:flex-row items-center gap-4 md:gap-6 z-10';
     const img = (
       <img
         src={t.image}
@@ -183,7 +183,7 @@ export default function ClientTestimonials(): JSX.Element {
           (e.target as HTMLImageElement).onerror = null;
           (e.target as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23f3f4f6'/><circle cx='50' cy='40' r='26' fill='%23d1d5db'/></svg>";
         }}
-        className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-[#FFC107]"
+        className="w-16 h-16 md:w-24 md:h-24 rounded-full object-cover border-4 border-[#FFC107] flex-shrink-0"
       />
     );
 
@@ -196,14 +196,14 @@ export default function ClientTestimonials(): JSX.Element {
         aria-label={`${t.name}, ${t.role}`}
       >
         <div className="flex-shrink-0">{img}</div>
-          <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2" aria-hidden>
+        <div className="flex-1 min-w-0 text-center md:text-left">
+          <div className="flex items-center justify-center md:justify-start gap-1.5 md:gap-2 mb-2" aria-hidden>
             {Array.from({ length: 5 }).map((_, i) => (
               <Star key={i} className={`inline-block ${i < t.rating ? '' : 'opacity-30'}`} />
             ))}
           </div>
           <p
-            className="text-gray-800 italic text-base md:text-lg leading-relaxed mb-4 cursor-pointer"
+            className="text-gray-800 italic text-sm md:text-lg leading-relaxed mb-3 md:mb-4 cursor-pointer"
             onMouseEnter={() => pauseTimer()}
             onMouseLeave={() => startTimer()}
             onTouchStart={() => pauseTimer()}
@@ -226,7 +226,7 @@ export default function ClientTestimonials(): JSX.Element {
         
         {/* TESTIMONIAL CARD WITH ARROWS */}
         <div
-          className="relative w-full max-w-5xl flex items-center justify-center min-h-[400px]"
+          className="relative w-full max-w-5xl flex items-center justify-center min-h-[220px] md:min-h-[400px]"
           onMouseEnter={() => pauseTimer()}
           onMouseLeave={() => startTimer()}
           onTouchStart={() => pauseTimer()}
@@ -236,9 +236,9 @@ export default function ClientTestimonials(): JSX.Element {
           <button
             aria-label="Previous testimonial"
             onClick={prevBtn}
-            className="absolute left-0 -translate-x-1/2 md:-translate-x-3/4 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow-md w-10 h-10 md:w-12 md:h-12 flex items-center justify-center z-20 "
+            className="absolute left-2 md:left-0 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow-md w-8 h-8 md:w-12 md:h-12 flex items-center justify-center z-20"
           >
-            <span className="text-lg md:text-xl">❮</span>
+            <span className="text-base md:text-xl">❮</span>
           </button>
 
           {/* Card viewport */}
@@ -272,10 +272,9 @@ export default function ClientTestimonials(): JSX.Element {
           <button
             aria-label="Next testimonial"
             onClick={() => next(false)}
-
-            className="absolute right-0 translate-x-1/2 md:translate-x-3/4 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow-md w-10 h-10 md:w-12 md:h-12 flex items-center justify-center z-20 "
+            className="absolute right-2 md:right-0 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow-md w-8 h-8 md:w-12 md:h-12 flex items-center justify-center z-20"
           >
-            <span className="text-lg md:text-xl">❯</span>
+            <span className="text-base md:text-xl">❯</span>
           </button>
         </div>
 

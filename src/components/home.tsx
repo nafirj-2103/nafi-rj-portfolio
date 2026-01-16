@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+// EmailJS will be loaded dynamically
 // Use small inline SVGs to avoid pulling icon library into the initial bundle
 const ExternalLinkIcon = ({ className = '' }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -39,9 +40,9 @@ const MailIcon = ({ className = '' }: { className?: string }) => (
   </svg>
 );
 
-const PhoneIcon = ({ className = '' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 16.92V21a1 1 0 0 1-1.11 1A19 19 0 0 1 3 5.11 1 1 0 0 1 4 4h4.09a1 1 0 0 1 1 .75c.12.64.33 1.26.62 1.84a1 1 0 0 1-.24 1.05L8.91 9.91a16 16 0 0 0 6.18 6.18l1.27-1.27a1 1 0 0 1 1.05-.24c.58.29 1.2.5 1.84.62a1 1 0 0 1 .75 1V22z" />
+const WhatsAppIcon = ({ className = '' }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden>
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
   </svg>
 );
 
@@ -191,6 +192,8 @@ export default function Home() {
   const [inquiryLoading, setInquiryLoading] = useState(false);
   const [inquiryError, setInquiryError] = useState('');
   const [inquiryForm, setInquiryForm] = useState({ name: '', email: '', description: '', budget: '', timeline: '' });
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [showDownloadButton, setShowDownloadButton] = useState(false);
   useScrollAnimation();
 
   useEffect(() => {
@@ -213,6 +216,34 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Prevent body scroll when mobile menu is open
+  const scrollPositionRef = useRef(0);
+  
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      // Save current scroll position before fixing
+      scrollPositionRef.current = window.scrollY;
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollPositionRef.current}px`;
+      document.body.style.width = '100%';
+    } else {
+      // Restore scroll position after unfixing
+      const savedScrollY = scrollPositionRef.current;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, savedScrollY);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+    };
+  }, [mobileMenuOpen]);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -224,25 +255,41 @@ export default function Home() {
 
   const handleInquirySubmit = async (e) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!inquiryForm.name.trim() || !inquiryForm.email.trim() || !inquiryForm.description.trim()) {
+      setInquiryError('Please fill in all required fields (Name, Email, and Description).');
+      return;
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inquiryForm.email)) {
+      setInquiryError('Please enter a valid email address.');
+      return;
+    }
+    
     setInquiryLoading(true);
     setInquiryError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/inquiries', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Load EmailJS dynamically
+      const emailjs = await import('https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.mjs');
+
+      // Send email using EmailJS
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        {
+          from_name: inquiryForm.name,
+          from_email: inquiryForm.email,
+          project_description: inquiryForm.description,
+          budget: inquiryForm.budget || "Not specified",
+          timeline: inquiryForm.timeline || "Not specified",
+          to_email: "nafix2103@gmail.com",
         },
-        body: JSON.stringify(inquiryForm),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit inquiry');
-      }
-
-      const data = await response.json();
-      console.log('Inquiry submitted successfully:', data);
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      );
 
       // Reset form and close modal, show thank you
       setInquiryForm({ name: '', email: '', description: '', budget: '', timeline: '' });
@@ -253,19 +300,36 @@ export default function Home() {
       setTimeout(() => {
         setShowThankYouMessage(false);
       }, 5000);
-    } catch (error) {
-      console.error('Error submitting inquiry:', error);
-      setInquiryError(error.message || 'An error occurred while submitting your inquiry. Please try again.');
+    } catch (error: unknown) {
+      console.error('Full error:', error);
+      // Show detailed error for debugging
+      let errorMessage = 'Failed to send. ';
+      if (error && typeof error === 'object' && 'text' in error) {
+        errorMessage += String((error as { text: string }).text);
+      } else if (error instanceof Error) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += 'Please check your EmailJS configuration.';
+      }
+      setInquiryError(errorMessage);
     } finally {
       setInquiryLoading(false);
     }
   };
 
   const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+    // Reset body styles first to allow scrolling
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    
+    // Small delay to ensure styles are reset before scrolling
+    setTimeout(() => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 50);
   };
 
   const openLightbox = (images, index) => {
@@ -886,7 +950,7 @@ export default function Home() {
               <button
                 aria-label="Toggle menu"
                 aria-expanded={mobileMenuOpen}
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileMenuOpen(!mobileMenuOpen); }}
                 className={`p-2 rounded-md focus:outline-none ${scrolled ? 'text-gray-800' : 'text-white'}`}
               >
                 {mobileMenuOpen ? (
@@ -902,39 +966,52 @@ export default function Home() {
             </div>
           </div>
         </div>
-        {/* Mobile menu overlay */}
-        {mobileMenuOpen && (
-            <div className="md:hidden fixed inset-0 z-50 bg-white/95 backdrop-blur-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2">
-                <div className="relative h-10 w-10">
-                  <img src="/images/nafi-logo-white.png" alt="Nafi" className={`absolute inset-0 h-10 w-10 object-contain transition-opacity duration-300 ease-in-out ${scrolled ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src="/images/nafi-logo-new.jpg" alt="Nafi" className={`absolute inset-0 h-10 w-10 object-contain transition-opacity duration-300 ease-in-out ${scrolled ? 'opacity-100' : 'opacity-0'}`} />
-                </div>
-                <div className="text-lg font-bold">NAFI CREATION</div>
-              </div>
-              <button aria-label="Close menu" onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-md">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <nav className="flex flex-col space-y-4">
-              {['HOME', 'ABOUT', 'PORTFOLIO', 'SERVICES', 'CONTACT'].map((item) => (
-                <button key={item} onClick={() => { setMobileMenuOpen(false); scrollToSection(item.toLowerCase()); }} className="text-lg font-medium text-gray-800 text-left">
-                  {item}
-                </button>
-              ))}
-              <button
-                onClick={() => { setMobileMenuOpen(false); setShowInquiryModal(true); }}
-                className="text-lg font-medium text-[#FFC107] text-left"
-              >
-                INQUIRY
-              </button>
-            </nav>
-          </div>
-        )}
       </MotionNav>
+
+      {/* Mobile menu overlay - clicking closes menu (full viewport coverage) */}
+      {mobileMenuOpen && (
+        <div 
+          className="md:hidden fixed bg-black/50"
+          style={{ zIndex: 9998, top: 0, left: 0, right: 0, bottom: 0, position: 'fixed' }}
+          onMouseDown={() => setMobileMenuOpen(false)}
+          onTouchStart={() => setMobileMenuOpen(false)}
+        />
+      )}
+      {/* Menu panel - right side drawer 50% width (outside nav for full screen coverage) */}
+      <div 
+        className={`md:hidden fixed top-0 right-0 bottom-0 bg-white overflow-y-auto overscroll-contain shadow-2xl transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        style={{ zIndex: 9999, width: '50vw', height: '100vh' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-4 pb-12 flex flex-col bg-white h-full">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-2">
+              <div className="relative h-8 w-8">
+                <img src="/images/nafi-logo-new.jpg" alt="Nafi" className="h-8 w-8 object-contain" />
+              </div>
+              <div className="text-sm font-bold text-gray-900">NAFI CREATIONS</div>
+            </div>
+            <button aria-label="Close menu" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileMenuOpen(false); }} className="p-2 rounded-md text-gray-900">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <nav className="flex flex-col space-y-3 bg-white flex-1">
+            {['HOME', 'ABOUT', 'PORTFOLIO', 'SERVICES', 'CONTACT'].map((item) => (
+              <button key={item} onClick={(e) => { e.stopPropagation(); setMobileMenuOpen(false); scrollToSection(item.toLowerCase()); }} className="text-base font-semibold text-gray-900 text-left py-3 px-2 border-b border-gray-200 bg-white">
+                {item}
+              </button>
+            ))}
+            <button
+              onClick={(e) => { e.stopPropagation(); setMobileMenuOpen(false); setShowInquiryModal(true); }}
+              className="text-base font-semibold text-[#FFC107] text-left py-3 px-2 bg-white"
+            >
+              INQUIRY
+            </button>
+          </nav>
+        </div>
+      </div>
 
       {/* Hero Section - New Design */}
   <MotionSection id="home" className="min-h-screen pt-32 pb-24 flex items-center justify-center relative bg-white overflow-hidden" initial={isAndroidDevice? 'hidden': undefined} animate={isAndroidDevice? 'visible': undefined} variants={isAndroidDevice? containerVariants: undefined}>
@@ -945,19 +1022,19 @@ export default function Home() {
     <div className={`absolute top-20 left-8 w-1 h-32 bg-[#FFC107] transition-all duration-1000 delay-500 ${isLoaded ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'}`}></div>
         <div className={`absolute bottom-20 right-8 w-32 h-1 bg-[#FFC107] transition-all duration-1000 delay-700 ${isLoaded ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`}></div>
         
-        <MotionDiv className="relative z-10 text-center max-w-5xl mx-auto px-8" variants={isAndroidDevice? itemVariants: undefined} style={isAndroidDevice? { willChange: 'transform, opacity' } : undefined}>
-          <div className="mb-16">
+        <MotionDiv className="relative z-10 text-center max-w-5xl mx-auto px-4 sm:px-6 md:px-8" variants={isAndroidDevice? itemVariants: undefined} style={isAndroidDevice? { willChange: 'transform, opacity' } : undefined}>
+          <div className="mb-8 md:mb-16">
             {/* Main heading with staggered animation */}
-            <div className="mb-8">
+            <div className="mb-4 md:mb-8">
               {isAndroidDevice ?
                (
                 <>
-                 <motion.h1 variants={itemVariants} className="text-7xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter text-white">NAFI</motion.h1> <motion.h1 variants={itemVariants} className="text-7xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter text-white">CREATIONS</motion.h1>
+                 <motion.h1 variants={itemVariants} className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter text-white">NAFI</motion.h1> <motion.h1 variants={itemVariants} className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter text-white">CREATIONS</motion.h1>
                   </>
               ) : (
                 <>
   <h1
-    className={`text-[90px] font-black leading-none tracking-tighter text-white
+    className={`text-5xl sm:text-6xl md:text-7xl lg:text-[90px] font-black leading-none tracking-tighter text-white
     transition-all duration-1000 delay-300 ease-out
     ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
   >
@@ -965,7 +1042,7 @@ export default function Home() {
   </h1>
 
   <h1
-    className={`text-[90px] font-black leading-none tracking-tighter text-white
+    className={`text-5xl sm:text-6xl md:text-7xl lg:text-[90px] font-black leading-none tracking-tighter text-white
     transition-all duration-1000 delay-500 ease-out
     ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
   >
@@ -976,9 +1053,9 @@ export default function Home() {
             </div>
 
           {/* Yellow accent bars with animation */}
-          <div className="flex justify-center items-center space-x-0 mb-12">
-            <div className={`w-20 h-1 bg-[#FFC107] transition-all duration-800 delay-700 ${isLoaded ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`}></div>
-            <div className={`w-20 h-1 bg-[#FFC107] transition-all duration-800 delay-800 ${isLoaded ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`}></div>
+          <div className="flex justify-center items-center space-x-0 mb-6 md:mb-12">
+            <div className={`w-12 sm:w-16 md:w-20 h-1 bg-[#FFC107] transition-all duration-800 delay-700 ${isLoaded ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`}></div>
+            <div className={`w-12 sm:w-16 md:w-20 h-1 bg-[#FFC107] transition-all duration-800 delay-800 ${isLoaded ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`}></div>
           </div>
             
 
@@ -986,23 +1063,28 @@ export default function Home() {
             
             {/* Subtitle with fade-in */}
           
-            <p className={`text-xl font-light tracking-wide text-white mb-6 transition-all duration-1000 delay-900 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+            <p className={`text-lg sm:text-xl font-light tracking-wide text-white mb-4 md:mb-6 transition-all duration-1000 delay-900 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
               Design beyond limits
             </p>
             
             {/* Description with fade-in */}
-            <p className={`text-base text-white max-w-2xl mx-auto leading-relaxed mb-12 transition-all duration-1000 delay-1000 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+            <p className={`text-sm sm:text-base text-white max-w-2xl mx-auto leading-relaxed mb-8 md:mb-12 px-2 transition-all duration-1000 delay-1000 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
               Creating bold visual experiences where creativity meets structure and flow.
               A fusion of graphic design, UI/UX, and front-end development built for modern brands.
             </p>
           </div>
           
           {/* CTA Button with hover animations */}
-          <div className={`transition-all duration-1000 delay-1100 mb-8 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+          <div className={`transition-all duration-1000 delay-1100 mb-4 md:mb-8 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
             <Button 
-              onClick={() => scrollToSection('portfolio')}
+              onClick={() => {
+                setShowResumeModal(true);
+                setShowDownloadButton(false);
+                // Show download button after a short delay (after user views PDF)
+                setTimeout(() => setShowDownloadButton(true), 1500);
+              }}
               size="lg"
-              className="hero-cta bg-[#FFC107] hover:bg-[#FFB300] text-black font-semibold px-6 py-3 text-base rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105 uppercase tracking-wide transform hover:-translate-y-1 inline-flex items-center justify-center"
+              className="hero-cta bg-[#FFC107] hover:bg-[#FFB300] text-black font-semibold px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105 uppercase tracking-wide transform hover:-translate-y-1 inline-flex items-center justify-center"
             >
               VIEW MY RESUME
             </Button>
@@ -1040,6 +1122,7 @@ export default function Home() {
                <Button
   variant="outline"
   size="lg"
+  onClick={() => scrollToSection('contact')}
   className="
     border-2 border-black
     bg-gradient-to-tr from-white via-gray-600 to-gray-800
@@ -1245,24 +1328,38 @@ export default function Home() {
           </p>
           
           <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <div className="group p-6 hover:bg-gray-50 transition-all duration-300 text-center">
+            <button 
+              onClick={() => window.location.href = 'mailto:nafix2103@gmail.com'}
+              className="group p-6 hover:bg-gray-50 transition-all duration-300 text-center cursor-pointer block w-full"
+            >
               <MailIcon className="w-8 h-8 text-[#FFC107] mx-auto mb-3" />
               <h3 className="text-base font-bold mb-2 text-black">Email</h3>
               <p className="text-gray-600 text-sm">nafix2103@gmail.com</p>
-            </div>
-            <div className="group p-6 hover:bg-gray-50 transition-all duration-300 text-center">
-              <PhoneIcon className="w-8 h-8 text-[#FFC107] mx-auto mb-3" />
-              <h3 className="text-base font-bold mb-2 text-black">Phone</h3>
+            </button>
+            <a 
+              href="https://wa.me/923266438203" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="group p-6 hover:bg-gray-50 transition-all duration-300 text-center cursor-pointer block"
+            >
+              <WhatsAppIcon className="w-8 h-8 text-[#FFC107] mx-auto mb-3" />
+              <h3 className="text-base font-bold mb-2 text-black">WhatsApp</h3>
               <p className="text-gray-600 text-sm">03266438203</p>
-            </div>
-            <div className="group p-6 hover:bg-gray-50 transition-all duration-300 text-center">
+            </a>
+            <a 
+              href="https://web.facebook.com/nafi.rj.creative?_rdc=1&_rdr#" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="group p-6 hover:bg-gray-50 transition-all duration-300 text-center cursor-pointer block"
+            >
               <FacebookIcon className="w-8 h-8 text-[#FFC107] mx-auto mb-3" />
               <h3 className="text-base font-bold mb-2 text-black">Social</h3>
               <p className="text-gray-600 text-sm">Nafi Rj</p>
-            </div>
+            </a>
           </div>
 
           <Button 
+            onClick={() => setShowInquiryModal(true)}
             size="lg"
             className="bg-[#FFC107] hover:bg-[#FFB300] text-black font-semibold px-8 py-3 text-base rounded-full transition-all duration-300 hover:shadow-lg"
           >
@@ -1517,6 +1614,51 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Resume Viewer Modal */}
+      <Dialog open={showResumeModal} onOpenChange={setShowResumeModal}>
+        <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0 overflow-hidden">
+          <div className="relative w-full h-full flex flex-col">
+            {/* Header with Download Button and Close */}
+            <div className="absolute top-0 right-0 left-0 z-10 bg-gradient-to-b from-black/70 to-transparent p-4 flex justify-between items-center">
+              <h3 className="text-white font-semibold text-lg">Resume - Nafeel Qamar</h3>
+              <div className="flex items-center gap-3">
+                {showDownloadButton && (
+                  <a
+                    href="/NAFI_RESUME.pdf"
+                    download="Nafeel_Qamar_Resume.pdf"
+                    className="bg-[#FFC107] hover:bg-[#FFB300] text-black font-semibold px-6 py-2 rounded-full transition-all duration-300 hover:shadow-lg flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download Resume
+                  </a>
+                )}
+                <button
+                  onClick={() => setShowResumeModal(false)}
+                  className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-all duration-300 hover:shadow-lg"
+                  aria-label="Close"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            {/* PDF Viewer */}
+            <iframe
+              src="/NAFI_RESUME.pdf"
+              className="w-full h-full border-0"
+              title="Resume - Nafeel Qamar"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -64,8 +64,8 @@ const Admin = mongoose.model('Admin', adminSchema);
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASSWORD
+    user: process.env.EMAIL_USER || process.env.GMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD || process.env.GMAIL_PASSWORD
   }
 });
 
@@ -122,39 +122,115 @@ app.post('/api/inquiries', async (req, res) => {
       inquiryId = inquiry._id;
     }
 
-    // Try to send email to admin (optional if credentials not set)
-    if (process.env.GMAIL_USER && process.env.GMAIL_PASSWORD && process.env.ADMIN_EMAIL) {
+    // Send email to admin
+    const emailUser = process.env.EMAIL_USER || process.env.GMAIL_USER;
+    const emailPassword = process.env.EMAIL_PASSWORD || process.env.GMAIL_PASSWORD;
+    const adminEmail = process.env.ADMIN_EMAIL;
+    
+    if (emailUser && emailPassword && adminEmail) {
       try {
         await transporter.sendMail({
-          from: process.env.GMAIL_USER,
-          to: process.env.ADMIN_EMAIL,
+          from: emailUser,
+          to: adminEmail,
           subject: `New Inquiry from ${name}`,
           html: `
-            <h2>New Inquiry Received</h2>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Description:</strong> ${description}</p>
-            <p><strong>Budget:</strong> ${budget || 'Not specified'}</p>
-            <p><strong>Timeline:</strong> ${timeline || 'Not specified'}</p>
-            <p><a href="${process.env.ADMIN_PANEL_URL || 'http://localhost:3000/admin'}">View in Admin Panel</a></p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #FFC107; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                .header h1 { color: #000; margin: 0; font-size: 24px; }
+                .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                .field { margin-bottom: 20px; padding: 15px; background: #fff; border-radius: 6px; border-left: 4px solid #FFC107; }
+                .field-label { font-weight: bold; color: #555; margin-bottom: 5px; font-size: 12px; text-transform: uppercase; }
+                .field-value { font-size: 16px; color: #333; }
+                .footer { text-align: center; margin-top: 20px; color: #888; font-size: 12px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>📬 New Inquiry Received</h1>
+                </div>
+                <div class="content">
+                  <div class="field">
+                    <div class="field-label">Name</div>
+                    <div class="field-value">${name}</div>
+                  </div>
+                  <div class="field">
+                    <div class="field-label">Email</div>
+                    <div class="field-value"><a href="mailto:${email}">${email}</a></div>
+                  </div>
+                  <div class="field">
+                    <div class="field-label">Project Description</div>
+                    <div class="field-value">${description}</div>
+                  </div>
+                  <div class="field">
+                    <div class="field-label">Budget</div>
+                    <div class="field-value">${budget || 'Not specified'}</div>
+                  </div>
+                  <div class="field">
+                    <div class="field-label">Timeline</div>
+                    <div class="field-value">${timeline || 'Not specified'}</div>
+                  </div>
+                </div>
+                <div class="footer">
+                  Sent from NAFI Creations Website<br/>
+                  ${new Date().toLocaleString()}
+                </div>
+              </div>
+            </body>
+            </html>
           `
         });
 
         // Send confirmation email to client
         await transporter.sendMail({
-          from: process.env.GMAIL_USER,
+          from: emailUser,
           to: email,
           subject: 'We received your inquiry - NAFI Creations',
           html: `
-            <h2>Thank you for your inquiry, ${name}!</h2>
-            <p>We have received your inquiry and will review it shortly.</p>
-            <p>We'll get back to you within 24-48 hours.</p>
-            <p>Best regards,<br/>NAFI Creations</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #FFC107; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+                .header h1 { color: #000; margin: 0; font-size: 28px; }
+                .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; text-align: center; }
+                .checkmark { font-size: 48px; margin-bottom: 20px; }
+                .footer { text-align: center; margin-top: 20px; color: #888; font-size: 12px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>Thank You, ${name}!</h1>
+                </div>
+                <div class="content">
+                  <div class="checkmark">✅</div>
+                  <h2>Your inquiry has been received!</h2>
+                  <p>We have received your inquiry and will review it shortly.</p>
+                  <p>We'll get back to you within 24-48 hours.</p>
+                  <p style="margin-top: 30px;">Best regards,<br/><strong>NAFI Creations</strong></p>
+                </div>
+                <div class="footer">
+                  © NAFI Creations
+                </div>
+              </div>
+            </body>
+            </html>
           `
         });
+        console.log('✅ Emails sent successfully');
       } catch (emailError) {
-        console.log('⚠️ Email not sent (Gmail credentials may not be configured):', emailError.message);
+        console.log('⚠️ Email not sent:', emailError.message);
       }
+    } else {
+      console.log('⚠️ Email credentials not configured. Set EMAIL_USER, EMAIL_PASSWORD, and ADMIN_EMAIL environment variables.');
     }
 
     res.status(201).json({ 
