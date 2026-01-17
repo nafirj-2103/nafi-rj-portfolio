@@ -173,7 +173,7 @@ export default function ClientTestimonials(): JSX.Element {
   }, [current]);
 
   const renderCard = (t: Testimonial, role = 'current', idx?: number) => {
-    const base = 'w-full max-w-5xl bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8 flex flex-col md:flex-row items-center gap-4 md:gap-6 z-10';
+    const base = 'w-full max-w-5xl bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6 md:p-8 flex flex-row items-start sm:items-center gap-3 sm:gap-4 md:gap-6 z-10';
     const img = (
       <img
         src={t.image}
@@ -183,7 +183,7 @@ export default function ClientTestimonials(): JSX.Element {
           (e.target as HTMLImageElement).onerror = null;
           (e.target as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23f3f4f6'/><circle cx='50' cy='40' r='26' fill='%23d1d5db'/></svg>";
         }}
-        className="w-16 h-16 md:w-24 md:h-24 rounded-full object-cover border-4 border-[#FFC107] flex-shrink-0"
+        className="w-14 h-14 sm:w-16 sm:h-16 md:w-24 md:h-24 rounded-full object-cover border-4 border-[#FFC107] flex-shrink-0"
       />
     );
 
@@ -196,14 +196,14 @@ export default function ClientTestimonials(): JSX.Element {
         aria-label={`${t.name}, ${t.role}`}
       >
         <div className="flex-shrink-0">{img}</div>
-        <div className="flex-1 min-w-0 text-center md:text-left">
-          <div className="flex items-center justify-center md:justify-start gap-1.5 md:gap-2 mb-2" aria-hidden>
+        <div className="flex-1 min-w-0 text-left">
+          <div className="flex items-center justify-start gap-1.5 md:gap-2 mb-2" aria-hidden>
             {Array.from({ length: 5 }).map((_, i) => (
               <Star key={i} className={`inline-block ${i < t.rating ? '' : 'opacity-30'}`} />
             ))}
           </div>
           <p
-            className="text-gray-800 italic text-sm md:text-lg leading-relaxed mb-3 md:mb-4 cursor-pointer"
+            className="text-gray-800 italic text-xs sm:text-sm md:text-lg leading-relaxed mb-2 sm:mb-3 md:mb-4 cursor-pointer"
             onMouseEnter={() => pauseTimer()}
             onMouseLeave={() => startTimer()}
             onTouchStart={() => pauseTimer()}
@@ -212,8 +212,8 @@ export default function ClientTestimonials(): JSX.Element {
             "{t.text}"
           </p>
           <div>
-            <div className="font-bold text-black text-sm md:text-base">{t.name}</div>
-            <div className="text-gray-500 text-xs md:text-sm">{t.role}</div>
+            <div className="font-bold text-black text-xs sm:text-sm md:text-base">{t.name}</div>
+            <div className="text-gray-500 text-xs">{t.role}</div>
           </div>
         </div>
       </article>
@@ -224,25 +224,43 @@ export default function ClientTestimonials(): JSX.Element {
     <section className="py-12 px-4 md:px-8 w-full">
       <div className="flex flex-col items-center w-full">
         
+        {/* MOBILE NAV ARROWS (above card on sm, hidden on md+) */}
+        <div className="flex md:hidden gap-4 justify-center mb-6 w-full">
+          <button
+            aria-label="Previous testimonial"
+            onClick={prevBtn}
+            className="bg-white border rounded-full shadow-md w-10 h-10 flex items-center justify-center hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-lg">❮</span>
+          </button>
+          <button
+            aria-label="Next testimonial"
+            onClick={() => next(false)}
+            className="bg-white border rounded-full shadow-md w-10 h-10 flex items-center justify-center hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-lg">❯</span>
+          </button>
+        </div>
+        
         {/* TESTIMONIAL CARD WITH ARROWS */}
         <div
-          className="relative w-full max-w-5xl flex items-center justify-center min-h-[220px] md:min-h-[400px]"
+          className="relative w-full max-w-5xl flex items-center justify-center min-h-[200px] sm:min-h-[240px] md:min-h-[400px]"
           onMouseEnter={() => pauseTimer()}
           onMouseLeave={() => startTimer()}
           onTouchStart={() => pauseTimer()}
           onTouchEnd={() => startTimer()}
         >
-          {/* Left arrow */}
+          {/* Left arrow (desktop/tablet only) */}
           <button
             aria-label="Previous testimonial"
             onClick={prevBtn}
-            className="absolute left-2 md:left-0 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow-md w-8 h-8 md:w-12 md:h-12 flex items-center justify-center z-20"
+            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow-md w-12 h-12 items-center justify-center z-20 hover:bg-gray-50 transition-colors"
           >
-            <span className="text-base md:text-xl">❮</span>
+            <span className="text-xl">❮</span>
           </button>
 
           {/* Card viewport */}
-          <div className="w-full px-12 md:px-20">
+          <div className="w-full px-4 sm:px-12 md:px-20">
             <div className="relative w-full flex items-center justify-center">
               {/* animation keyframes */}
               <style>{`
@@ -268,13 +286,13 @@ export default function ClientTestimonials(): JSX.Element {
             </div>
           </div>
 
-          {/* Right arrow */}
+          {/* Right arrow (desktop/tablet only) */}
           <button
             aria-label="Next testimonial"
             onClick={() => next(false)}
-            className="absolute right-2 md:right-0 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow-md w-8 h-8 md:w-12 md:h-12 flex items-center justify-center z-20"
+            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow-md w-12 h-12 items-center justify-center z-20 hover:bg-gray-50 transition-colors"
           >
-            <span className="text-base md:text-xl">❯</span>
+            <span className="text-xl">❯</span>
           </button>
         </div>
 

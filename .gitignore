@@ -42,3 +42,5 @@ core
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 **/tempobook/**
+.env
+.env.local

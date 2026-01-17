@@ -1,3 +1,4 @@
+import emailjs from "@emailjs/browser"; 
 import { Button } from '@/components/ui/button';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { motion } from "framer-motion";
@@ -253,68 +254,64 @@ export default function Home() {
     setInquiryForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleInquirySubmit = async (e) => {
-    e.preventDefault();
-    
-    // Basic validation
-    if (!inquiryForm.name.trim() || !inquiryForm.email.trim() || !inquiryForm.description.trim()) {
-      setInquiryError('Please fill in all required fields (Name, Email, and Description).');
-      return;
+const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  // Basic validation
+  if (!inquiryForm.name.trim() || !inquiryForm.email.trim() || !inquiryForm.description.trim()) {
+    setInquiryError('Please fill in all required fields (Name, Email, and Description).');
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(inquiryForm.email)) {
+    setInquiryError('Please enter a valid email address.');
+    return;
+  }
+
+  setInquiryLoading(true);
+  setInquiryError('');
+
+  try {
+    // EmailJS template parameters
+    const templateParams = {
+      from_name: inquiryForm.name,
+      from_email: inquiryForm.email,
+      to_email: 'nafix2103@gmail.com',
+      project_description: inquiryForm.description,
+      budget: inquiryForm.budget || 'Not specified',
+      timeline: inquiryForm.timeline || 'Not specified',
+    };
+
+    // Send email via EmailJS npm package
+    await emailjs.send(
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+      templateParams,
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+    );
+
+    // Reset form & show success
+    setInquiryForm({ name: '', email: '', description: '', budget: '', timeline: '' });
+    setShowInquiryModal(false);
+    setShowThankYouMessage(true);
+
+    setTimeout(() => setShowThankYouMessage(false), 5000);
+
+  } catch (error: unknown) {
+    console.error('Full error:', error);
+
+    let errorMessage = 'Failed to send. ';
+    if (error && typeof error === 'object' && 'message' in error) {
+      errorMessage += (error as { message: string }).message;
+    } else {
+      errorMessage += 'Please check your EmailJS configuration.';
     }
-    
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(inquiryForm.email)) {
-      setInquiryError('Please enter a valid email address.');
-      return;
-    }
-    
-    setInquiryLoading(true);
-    setInquiryError('');
+    setInquiryError(errorMessage);
 
-    try {
-      // Load EmailJS dynamically
-      const emailjs = await import('https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.mjs');
-
-      // Send email using EmailJS
-      await emailjs.send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        {
-          from_name: inquiryForm.name,
-          from_email: inquiryForm.email,
-          project_description: inquiryForm.description,
-          budget: inquiryForm.budget || "Not specified",
-          timeline: inquiryForm.timeline || "Not specified",
-          to_email: "nafix2103@gmail.com",
-        },
-        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-      );
-
-      // Reset form and close modal, show thank you
-      setInquiryForm({ name: '', email: '', description: '', budget: '', timeline: '' });
-      setShowInquiryModal(false);
-      setShowThankYouMessage(true);
-
-      // Auto-hide thank you message after 5 seconds
-      setTimeout(() => {
-        setShowThankYouMessage(false);
-      }, 5000);
-    } catch (error: unknown) {
-      console.error('Full error:', error);
-      // Show detailed error for debugging
-      let errorMessage = 'Failed to send. ';
-      if (error && typeof error === 'object' && 'text' in error) {
-        errorMessage += String((error as { text: string }).text);
-      } else if (error instanceof Error) {
-        errorMessage += error.message;
-      } else {
-        errorMessage += 'Please check your EmailJS configuration.';
-      }
-      setInquiryError(errorMessage);
-    } finally {
-      setInquiryLoading(false);
-    }
+  } finally {
+    setInquiryLoading(false);
+  }
   };
 
   const scrollToSection = (sectionId) => {
