@@ -9,6 +9,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Preload critical hero images to prevent first paint delay -->
+    <link rel="preload" as="image" href="/images/landing%20page%20bg.png" media="(min-width: 1024px)">
+    <link rel="preload" as="image" href="/images/mob%20view.png" media="(max-width: 1023px)">
+    <!-- Preload service icons for fast rendering -->
+    <link rel="preload" as="image" href="/images/branding-identity.gif">
+    <link rel="preload" as="image" href="/images/logo-design.gif">
+    <link rel="preload" as="image" href="/images/post.gif">
+    <link rel="preload" as="image" href="/images/flyer.gif">
+    <link rel="preload" as="image" href="/images/responsive-design.gif">
+    <link rel="preload" as="image" href="/images/web-code.gif">
   </head>
   <body>
     <div id="root"></div>

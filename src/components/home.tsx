@@ -397,39 +397,39 @@ const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       title: "Brand Identity", 
       description: "Complete brand systems including logos, color palettes, and guidelines",
       number: "01",
-      icon: "/public/images/branding-identity.gif"
+      icon: "/images/branding-identity.gif"
     },
     { 
       title: "Logo Design", 
       description: "Memorable and scalable logos that represent your brand",
       number: "02",
-      icon: "/public/images/logo-design.gif"
+      icon: "/images/logo-design.gif"
     },
     { 
       title: "Social Media Posts", 
       description: "Engaging social templates and campaign designs",
       number: "03",
-      icon: "/public/images/post.gif"
+      icon: "/images/post.gif"
     },
     { 
       title: "Brochures & Flyers", 
       description: "Engaging social templates and campaign designs",
       number: "04",
-      icon: "/public/images/flyer.gif"
+      icon: "/images/flyer.gif"
     },
 
      { 
       title: "Web & Android UI/UX Templates", 
       description: "Custom UI/UX templates for responsive web and Android applications.",
       number: "05",
-      icon: "/public/images/responsive-design.gif"
+      icon: "/images/responsive-design.gif"
     },
 
      { 
       title: "Custom Website Development", 
       description: "Designing and developing custom websites with modern code, secure hosting, and complete domain setup.",
       number: "06",
-      icon: "/public/images/web-code.gif"
+      icon: "/images/web-code.gif"
     },
   ];
 
@@ -1033,7 +1033,7 @@ const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   <h1
     className={`text-5xl sm:text-6xl md:text-7xl lg:text-[90px] font-black leading-none tracking-tighter text-white
     transition-all duration-1000 delay-300 ease-out
-    ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
+    ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-0 opacity-100'}`}
   >
     NAFI
   </h1>
@@ -1041,7 +1041,7 @@ const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   <h1
     className={`text-5xl sm:text-6xl md:text-7xl lg:text-[90px] font-black leading-none tracking-tighter text-white
     transition-all duration-1000 delay-500 ease-out
-    ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
+    ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-0 opacity-100'}`}
   >
     CREATIONS
   </h1>
@@ -1144,7 +1144,7 @@ const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
               <div className="relative">
                 {/* Yellow accent elements */}
                 <div className="absolute -top-8 -right-8 w-16 h-16 border-4 border-[#FFC107]"></div>
-                <div className="absolute -bottom-8 -left-8 w-12 h-12 bg-[#FFC107]"></div>
+                <div className="absolute -bottom-8 -left-8 w-6 h-12 bg-[#FFC107]"></div>
                 
                 {/* Main Photo */}
                 <div className="relative w-100 h-96 overflow-hidden border-8 border-white shadow-2xl rounded-full">
@@ -1155,11 +1155,13 @@ const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                   />
                 </div>
                 
-                {/* Experience Badge */}
-                <div className="absolute -bottom-6 -right-6 bg-white p-6 shadow-xl border-l-4 border-[#FFC107]">
-                  <div className="text-3xl font-black text-black mb-1">5+</div>
-                  <div className="text-sm text-gray-600 font-medium uppercase tracking-wide">Years Experience</div>
+                {/* Name Below Photo */}
+                <div className="text-center mt-8">
+                  <h3 className="text-3xl font-black text-black tracking-tight">Nafeel Qamar</h3>
+                  <p className="text-gray-600 font-medium mt-2">Graphic Designer & Developer</p>
                 </div>
+                
+                
               </div>
             </div>
           </div>
@@ -1254,6 +1256,11 @@ const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   <img
     src={service.icon}
     alt={service.title}
+    loading="eager"
+    onError={(e) => {
+      (e.target as HTMLImageElement).onerror = null;
+      (e.target as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><circle cx='32' cy='28' r='8' fill='%23d1d5db'/><path d='M8 56h48v-2H8z' fill='%23d1d5db'/></svg>";
+    }}
     className="w-16 h-16 object-contain"
   />
 </div>
