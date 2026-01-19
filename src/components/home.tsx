@@ -300,12 +300,21 @@ const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
   } catch (error: unknown) {
     console.error('Full error:', error);
+    console.error('Service ID:', import.meta.env.VITE_EMAILJS_SERVICE_ID ? 'Set' : 'NOT SET');
+    console.error('Template ID:', import.meta.env.VITE_EMAILJS_TEMPLATE_ID ? 'Set' : 'NOT SET');
+    console.error('Public Key:', import.meta.env.VITE_EMAILJS_PUBLIC_KEY ? 'Set' : 'NOT SET');
 
-    let errorMessage = 'Failed to send. ';
-    if (error && typeof error === 'object' && 'message' in error) {
+    let errorMessage = 'Failed to send inquiry. ';
+    
+    // Check if environment variables are missing
+    if (!import.meta.env.VITE_EMAILJS_PUBLIC_KEY || !import.meta.env.VITE_EMAILJS_SERVICE_ID || !import.meta.env.VITE_EMAILJS_TEMPLATE_ID) {
+      errorMessage = 'EmailJS is not properly configured. Please contact the site administrator.';
+    } else if (error && typeof error === 'object' && 'message' in error) {
       errorMessage += (error as { message: string }).message;
+    } else if (error instanceof Error) {
+      errorMessage += error.message;
     } else {
-      errorMessage += 'Please check your EmailJS configuration.';
+      errorMessage += 'Please check your internet connection and try again.';
     }
     setInquiryError(errorMessage);
 
