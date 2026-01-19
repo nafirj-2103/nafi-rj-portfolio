@@ -174,10 +174,10 @@ export default function Home() {
   const MotionDiv = motion.div;
 
   const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 1, y: 0 },
     visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.12, duration: 0.8 } }
   };
-  const itemVariants = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } } };
+  const itemVariants = { hidden: { opacity: 1, y: 0 }, visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } } };
   const [selectedProject, setSelectedProject] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -1020,7 +1020,7 @@ const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       </div>
 
       {/* Hero Section - New Design */}
-  <MotionSection id="home" className="min-h-screen pt-32 pb-24 flex items-center justify-center relative bg-white overflow-hidden" initial={isAndroidDevice? 'hidden': undefined} animate={isAndroidDevice? 'visible': undefined} variants={isAndroidDevice? containerVariants: undefined}>
+  <MotionSection id="home" className="min-h-screen pt-20 sm:pt-32 pb-16 sm:pb-24 flex items-center justify-center relative bg-white overflow-visible" initial={isAndroidDevice? 'hidden': undefined} animate={isAndroidDevice? 'visible': undefined} variants={isAndroidDevice? containerVariants: undefined}>
     {/* Responsive background images: desktop and mobile */}
     <div className="absolute inset-0 hidden lg:block" style={{ backgroundImage: "url('/images/landing%20page%20bg.png')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
     <div className="absolute inset-0 block lg:hidden" style={{ backgroundImage: "url('/images/mob%20view.png')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
@@ -1028,19 +1028,19 @@ const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     <div className={`absolute top-20 left-8 w-1 h-32 bg-[#FFC107] transition-all duration-1000 delay-500 ${isLoaded ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'}`}></div>
         <div className={`absolute bottom-20 right-8 w-32 h-1 bg-[#FFC107] transition-all duration-1000 delay-700 ${isLoaded ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`}></div>
         
-        <MotionDiv className="relative z-10 text-center max-w-5xl mx-auto px-4 sm:px-6 md:px-8" variants={isAndroidDevice? itemVariants: undefined} style={isAndroidDevice? { willChange: 'transform, opacity' } : undefined}>
-          <div className="mb-8 md:mb-16">
+        <MotionDiv className="relative z-10 text-center max-w-5xl mx-auto px-3 sm:px-6 md:px-8 w-full" variants={isAndroidDevice? itemVariants: undefined} style={isAndroidDevice? { willChange: 'transform, opacity' } : undefined}>
+          <div className="mb-6 sm:mb-8 md:mb-16">
             {/* Main heading with staggered animation */}
-            <div className="mb-4 md:mb-8">
+            <div className="mb-3 sm:mb-4 md:mb-8">
               {isAndroidDevice ?
                (
                 <>
-                 <motion.h1 variants={itemVariants} className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter text-white">NAFI</motion.h1> <motion.h1 variants={itemVariants} className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter text-white">CREATIONS</motion.h1>
+                 <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl md:text-8xl lg:text-9xl font-black leading-tight sm:leading-none tracking-tighter text-white break-words">NAFI</motion.h1> <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl md:text-8xl lg:text-9xl font-black leading-tight sm:leading-none tracking-tighter text-white break-words">CREATIONS</motion.h1>
                   </>
               ) : (
                 <>
   <h1
-    className={`text-5xl sm:text-6xl md:text-7xl lg:text-[90px] font-black leading-none tracking-tighter text-white
+    className={`text-4xl sm:text-5xl md:text-7xl lg:text-[90px] font-black leading-tight sm:leading-none tracking-tighter text-white break-words
     transition-all duration-1000 delay-300 ease-out
     ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-0 opacity-100'}`}
   >
@@ -1048,7 +1048,7 @@ const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   </h1>
 
   <h1
-    className={`text-5xl sm:text-6xl md:text-7xl lg:text-[90px] font-black leading-none tracking-tighter text-white
+    className={`text-4xl sm:text-5xl md:text-7xl lg:text-[90px] font-black leading-tight sm:leading-none tracking-tighter text-white break-words
     transition-all duration-1000 delay-500 ease-out
     ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-0 opacity-100'}`}
   >
@@ -1059,7 +1059,7 @@ const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             </div>
 
           {/* Yellow accent bars with animation */}
-          <div className="flex justify-center items-center space-x-0 mb-6 md:mb-12">
+          <div className="flex justify-center items-center space-x-0 mb-4 sm:mb-6 md:mb-12">
             <div className={`w-12 sm:w-16 md:w-20 h-1 bg-[#FFC107] transition-all duration-800 delay-700 ${isLoaded ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`}></div>
             <div className={`w-12 sm:w-16 md:w-20 h-1 bg-[#FFC107] transition-all duration-800 delay-800 ${isLoaded ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`}></div>
           </div>
@@ -1069,19 +1069,19 @@ const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             
             {/* Subtitle with fade-in */}
           
-            <p className={`text-lg sm:text-xl font-light tracking-wide text-white mb-4 md:mb-6 transition-all duration-1000 delay-900 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+            <p className={`text-base sm:text-lg md:text-xl font-light tracking-wide text-white mb-3 sm:mb-4 md:mb-6 transition-all duration-1000 delay-900 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-0 opacity-100'}`}>
               Design beyond limits
             </p>
             
             {/* Description with fade-in */}
-            <p className={`text-sm sm:text-base text-white max-w-2xl mx-auto leading-relaxed mb-8 md:mb-12 px-2 transition-all duration-1000 delay-1000 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+            <p className={`text-xs sm:text-sm md:text-base text-white max-w-2xl mx-auto leading-relaxed mb-6 sm:mb-8 md:mb-12 px-2 transition-all duration-1000 delay-1000 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-0 opacity-100'}`}>
               Creating bold visual experiences where creativity meets structure and flow.
               A fusion of graphic design, UI/UX, and front-end development built for modern brands.
             </p>
           </div>
           
           {/* CTA Button with hover animations */}
-          <div className={`transition-all duration-1000 delay-1100 mb-4 md:mb-8 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+          <div className={`transition-all duration-1000 delay-1100 mb-4 md:mb-8 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-0 opacity-100'}`}>
             <Button 
               onClick={() => {
                 setShowResumeModal(true);
